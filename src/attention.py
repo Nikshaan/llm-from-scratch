@@ -266,5 +266,5 @@ batch_size, context_length, d_in = batch.shape
 d_out = 2
 mha = MultiHeadAttention(d_in, d_out, context_length, dropout=0.0, num_heads=2)
 context_vecs = mha(batch)
-print(context_vecs)
-print(context_vecs.shape)
+# print(context_vecs)
+# print(context_vecs.shape)
