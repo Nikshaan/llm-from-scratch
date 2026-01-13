@@ -271,11 +271,11 @@ out = model(batch)
 # print(out.shape) # 2, 4, 50257
 
 total_params = sum(p.numel() for p in model.parameters())
-print(f"Total parameters in GPT-124M model: {total_params}")
+# print(f"Total parameters in GPT-124M model: {total_params}")
 
 total_size_bytes = total_params * 4
 total_mb = total_size_bytes / (1024 ** 2)
-print(f"Total size of GPT-124M model parameters: {total_mb:.2f} MB")
+# print(f"Total size of GPT-124M model parameters: {total_mb:.2f} MB")
 
 def generate_text_simple(model, idx, max_new_tokens, context_size):
     for _ in range(max_new_tokens):
@@ -290,13 +290,13 @@ def generate_text_simple(model, idx, max_new_tokens, context_size):
 
 start_context = "Hello, I am"
 encoded = tokenizer.encode(start_context)
-print("encoded:", encoded)
+# print("encoded:", encoded)
 encoded_tensor = torch.tensor([encoded]) # batch size of 1, shape: (1, seq_length)
-print("encoded tensor shape:", encoded_tensor.shape)
+# print("encoded tensor shape:", encoded_tensor.shape)
 model.eval() # disables random components like dropout for deterministic output (which are only used in training)
 out = generate_text_simple(model = model, idx = encoded_tensor, max_new_tokens = 6, context_size = GPT_CONFIG_124["context_length"])
-print("Output: ", out)
-print("Output length:", out.shape)
+# print("Output: ", out)
+# print("Output length:", out.shape)
 
 decoded_text = tokenizer.decode(out[0].tolist())
-print("Decoded text:", decoded_text)
+# print("Decoded text:", decoded_text)
