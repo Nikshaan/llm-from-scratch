@@ -80,8 +80,6 @@ python src/finetune_instructions.py
 
 ### Chapter 6: Fine-tuning for Classification
 - `src/finetune_classification.py`
-- `train.csv`, `test.csv`, `validation.csv`
-- `sms_spam_collection/SMSSpamCollection.tsv`
 
 ### Chapter 7: Fine-tuning for Instructions
 - `src/finetune_instructions.py`
