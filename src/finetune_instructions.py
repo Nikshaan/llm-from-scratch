@@ -229,9 +229,6 @@ model = GPTModel(BASE_CONFIG)
 model.to(device)
 
 weights_path = "gpt2-small-124M.pth" 
-if not os.path.exists(weights_path):
-    raise FileNotFoundError(f"Cannot find {weights_path}. Please make sure you have the clean pretrained weights file.")
-
 state_dict = torch.load(weights_path, map_location=device, weights_only=True)
 
 model.load_state_dict(state_dict, strict=True) 
@@ -243,7 +240,7 @@ input_text = format_input(val_data[0])
 
 token_ids = generate(
     model,
-    idx = text_to_token_ids(input_text, tokenizer),
+    idx = text_to_token_ids(input_text, tokenizer).to(device),
     max_new_tokens = 35,
     context_size = BASE_CONFIG["context_length"],
     eos_id = 50256
@@ -284,7 +281,7 @@ for entry in test_data[:3]: # iterate over first three test entries
     input_text = format_input(entry)
     token_ids = generate(
         model,
-        idx = text_to_token_ids(input_text, tokenizer),
+        idx = text_to_token_ids(input_text, tokenizer).to(device),
         max_new_tokens = 256,
         context_size = BASE_CONFIG["context_length"],
         eos_id = 50256
@@ -304,7 +301,7 @@ for i, entry in tqdm(enumerate(test_data), total = len(test_data)):
     input_text = format_input(entry)
     token_ids = generate(
         model,
-        idx = text_to_token_ids(input_text, tokenizer),
+        idx = text_to_token_ids(input_text, tokenizer).to(device),
         max_new_tokens = 256,
         context_size = BASE_CONFIG["context_length"],
         eos_id = 50256
@@ -314,11 +311,11 @@ for i, entry in tqdm(enumerate(test_data), total = len(test_data)):
     response_text = (generated_text[len(input_text):]).replace('### Response:', '').strip()
 
     test_data[i]["model_response"] = response_text
-    
+
 with open(BASE_DIR/"data"/"instruction-data-with-responses.json", "w", encoding="utf-8") as f:
     json.dump(test_data, f, indent=4)
 
-file_name = f"{re.sub(r'[ ()]', '', BASE_CONFIG) }-sft.pth"
+file_name = f"{re.sub(r'[ ()]', '', str(BASE_CONFIG))}-sft.pth"
 torch.save(model.state_dict(), BASE_DIR/"models"/file_name)
 print(f"Model weights saved to {BASE_DIR/'models'/file_name}")
 

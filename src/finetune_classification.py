@@ -33,7 +33,7 @@ def download_and_unzip_spam_data(url, zip_path, extracted_path, data_file_path):
     os.rename(original_file_path, data_file_path)
     print(f"Data file extracted to {data_file_path}.")
     
-# download_and_unzip_spam_data(url, zip_path, extracted_path, data_file_path)
+download_and_unzip_spam_data(url, zip_path, extracted_path, data_file_path)
 
 df = pd.read_csv(data_file_path, sep='\t', header=None, names=['Label', 'Text'])
 
@@ -264,6 +264,7 @@ for param in base_model.parameters():
 torch.manual_seed(123)
 num_classes = 2  # spam or ham
 base_model.out_head = torch.nn.Linear(BASE_CONFIG["emb_dim"], num_classes)
+base_model.to(device)
 
 for param in base_model.trf_blocks[-1].parameters():
     param.requires_grad = True
@@ -276,6 +277,7 @@ for param in base_model.final_norm.parameters():
 inputs = tokenizer.encode("Do you have time")
 inputs = torch.tensor(inputs).unsqueeze(0)  # add batch dimension
 # print("Inputs:", inputs)
+inputs = inputs.to(device)
 # print("Input shape:", inputs.shape)
 
 with torch.no_grad():
@@ -357,6 +359,8 @@ def calc_loss_loader(data_loader, model, device, num_batches = None):
         
     for i, (input_batch, target_batch) in enumerate(data_loader):
         if i < num_batches:
+            input_batch = input_batch.to(device)
+            target_batch = target_batch.to(device)
             loss = calc_loss_batch(input_batch, target_batch, model, device)
             batch_size = input_batch.size(0)
             total_loss += loss.item() * batch_size
@@ -395,6 +399,9 @@ def train_classifier_simple(
         model.train()                   
 
         for input_batch, target_batch in train_loader:
+            input_batch = input_batch.to(device)
+            target_batch = target_batch.to(device)
+            
             optimizer.zero_grad()               
             loss = calc_loss_batch(input_batch, target_batch, model, device)
             loss.backward()                     

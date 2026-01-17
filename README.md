@@ -45,25 +45,6 @@ Fine-tune GPT to follow instructions:
 - Loads instruction-following datasets (instruction-input-output format)
 - Fine-tunes model for instruction-following capabilities
 
-## Setup
-
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. Run the training scripts:
-```bash
-# Pretrain the model
-python src/train.py
-
-# Fine-tune for classification
-python src/finetune_classification.py
-
-# Fine-tune for instructions
-python src/finetune_instructions.py
-```
-
 ## Project Structure by Chapter
 
 ### Chapter 2: Working with Text Data
@@ -84,3 +65,22 @@ python src/finetune_instructions.py
 ### Chapter 7: Fine-tuning for Instructions
 - `src/finetune_instructions.py`
 - `data/instruction-data.json`
+
+## Setup
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the training scripts:
+```bash
+# Pretrain the model
+python src/train.py
+
+# Fine-tune for classification
+python src/finetune_classification.py
+
+# Fine-tune for instructions
+python src/finetune_instructions.py
+```
