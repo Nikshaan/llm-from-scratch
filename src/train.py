@@ -234,7 +234,7 @@ train_losses, val_losses, tokens_seen = train_model_simple(
 # .parameters() method returns all trainable weight parameters of the model
 
 
-def plot_losses(epochs_seen, token_seen, train_losses, val_losses):
+def plot_losses(epochs_seen, token_seen, train_losses, val_losses, save_path =None):
     fig, ax1 = plt.subplots(figsize=(8, 5))
 
     ax1.plot(epochs_seen, train_losses, label='Train Loss')
@@ -251,6 +251,9 @@ def plot_losses(epochs_seen, token_seen, train_losses, val_losses):
     ax2.set_xlabel('Tokens Seen')
 
     fig.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Plot saved to {save_path}")
     plt.show()
 '''
 epochs_tensor = torch.linspace(0, num_epochs, len(train_losses))

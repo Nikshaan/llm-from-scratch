@@ -447,7 +447,7 @@ print(f"Training completed in {execution_time_minutes:.2f} minutes")
 
 def plot_values(
     epochs_seen, examples_seen, train_values, val_values,
-    label = "loss"):
+    label = "loss", save_path = None):
     fig, ax1 = plt.subplots(figsize=(5, 3))
 
     ax1.plot(epochs_seen, train_values, label = f"Training {label}")
@@ -462,12 +462,15 @@ def plot_values(
     ax2.plot(examples_seen, train_values, alpha = 0)
     ax2.set_xlabel("Examples seen")
     fig.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Plot saved to {save_path}")
     plt.show()
 
 epochs_tensor = torch.linspace(0, num_epochs, len(train_losses))
 examples_seen_tensor = torch.linspace(0, examples_seen, len(train_losses))
 
-plot_values(epochs_tensor, examples_seen_tensor, train_losses, val_losses)
+plot_values(epochs_tensor, examples_seen_tensor, train_losses, val_losses, save_path = "classification_loss.png")
 
 # no overfitting as no noticible gap between training and validation loss/accuracy
 
@@ -476,7 +479,7 @@ plot_values(epochs_tensor, examples_seen_tensor, train_losses, val_losses)
 epochs_tensor = torch.linspace(1, num_epochs, len(train_accs))
 examples_seen_tensor = torch.linspace(0, examples_seen, len(train_accs))
 
-plot_values(epochs_tensor, examples_seen_tensor, train_accs, val_accs, label = "accuracy")
+plot_values(epochs_tensor, examples_seen_tensor, train_accs, val_accs, label = "accuracy", save_path = "classification_accuracy.png")
 
 # training and validation accuracies increase over epochs
 
