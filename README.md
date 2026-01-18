@@ -2,6 +2,20 @@
 
 An implementation of a GPT style Large Language Model built from scratch using PyTorch. This repository contains the code for fundamental concepts of building, training, and fine-tuning language models, using Sebastian Raschka's 'Build a LLM from Scratch' book.
 
+## Colab notebook:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Rw_eBUzqHdjyqUs6ejScVMxXjZ3rxh7S?usp=sharing)
+
+## Training Results
+
+### Fine-Tuning Performance
+**Classification Task (Spam Detection)**
+
+![Classification Training vs Validation Loss](images/classification_loss.png)
+
+**Instruction Tuning (Alpaca Dataset)**
+
+![Instruction Tuning Loss](images/instruction_finetuning_loss.png)
+
 ## Source Files
 
 ### `src/data.py`
