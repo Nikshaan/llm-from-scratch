@@ -17,9 +17,10 @@ GPT_CONFIG_124M = {
     "qkv_bias": False,
 }
 
-torch.manual_seed(123)
-model = GPTModel(GPT_CONFIG_124M)
-model.eval()
+if __name__ == "__main__":
+    torch.manual_seed(123)
+    model = GPTModel(GPT_CONFIG_124M)
+    model.eval()
 
 def text_to_token_ids(text, tokenizer):
     encoded = tokenizer.encode(text, allowed_special={'<|endoftext|>'})
@@ -30,101 +31,102 @@ def token_ids_to_text(token_ids, tokenizer):
     flat = token_ids.flatten()
     return tokenizer.decode(flat.tolist())
 
-start_context = "Every effort moves you"
-tokenizer = tiktoken.get_encoding("gpt2")
+if __name__ == "__main__":
+    start_context = "Every effort moves you"
+    tokenizer = tiktoken.get_encoding("gpt2")
 
-token_ids = generate_text_simple(
-    model = model,
-    idx = text_to_token_ids(start_context, tokenizer),
-    max_new_tokens = 10,
-    context_size = GPT_CONFIG_124M["context_length"]
-)
+    token_ids = generate_text_simple(
+        model = model,
+        idx = text_to_token_ids(start_context, tokenizer),
+        max_new_tokens = 10,
+        context_size = GPT_CONFIG_124M["context_length"]
+    )
 
-# print("Output text: ", token_ids_to_text(token_ids, tokenizer))
+    # print("Output text: ", token_ids_to_text(token_ids, tokenizer))
 
-inputs = torch.tensor([[16833, 3626, 6100],
-                      [40, 1107, 588]])
+    inputs = torch.tensor([[16833, 3626, 6100],
+                        [40, 1107, 588]])
 
-targets = torch.tensor([[3626, 6100, 345],
-                        [1107, 588, 11311] ])
+    targets = torch.tensor([[3626, 6100, 345],
+                            [1107, 588, 11311] ])
 
-with torch.no_grad():
-    logits = model(inputs)
-probas = torch.softmax(logits, dim=-1)
-# print(probas.shape)
+    with torch.no_grad():
+        logits = model(inputs)
+    probas = torch.softmax(logits, dim=-1)
+    # print(probas.shape)
 
-token_ids = torch.argmax(probas, dim=-1, keepdim=True)
-# print("Token IDs:\n", token_ids)
+    token_ids = torch.argmax(probas, dim=-1, keepdim=True)
+    # print("Token IDs:\n", token_ids)
 
-# print("Targets batch 1: ", (token_ids_to_text(targets[0], tokenizer)))
-# print("Predicted batch 1: ", (token_ids_to_text(token_ids[0], tokenizer)))
+    # print("Targets batch 1: ", (token_ids_to_text(targets[0], tokenizer)))
+    # print("Predicted batch 1: ", (token_ids_to_text(token_ids[0], tokenizer)))
 
-text_idx = 0
-target_probas_1 = probas[text_idx, [0,1,2], targets[text_idx]]
-# print("Text 1: ", target_probas_1)
+    text_idx = 0
+    target_probas_1 = probas[text_idx, [0,1,2], targets[text_idx]]
+    # print("Text 1: ", target_probas_1)
 
-text_idx = 1
-target_probas_2 = probas[text_idx, [0,1,2], targets[text_idx]]
-# print("Text 2: ", target_probas_2)
-#  three target probabilities for each text in the batch
+    text_idx = 1
+    target_probas_2 = probas[text_idx, [0,1,2], targets[text_idx]]
+    # print("Text 2: ", target_probas_2)
+    #  three target probabilities for each text in the batch
 
-log_probas = torch.log(torch.cat((target_probas_1, target_probas_2)))
-# print("Log probabilities: ", log_probas)
+    log_probas = torch.log(torch.cat((target_probas_1, target_probas_2)))
+    # print("Log probabilities: ", log_probas)
 
-avg_log_proba = torch.mean(log_probas)
-# print("Average log probability: ", avg_log_proba) # need to get this close to 0
+    avg_log_proba = torch.mean(log_probas)
+    # print("Average log probability: ", avg_log_proba) # need to get this close to 0
 
-# cross entropy loss is used as it measures the difference between two probability distributions (true & predicted) (negative avg log proba)
+    # cross entropy loss is used as it measures the difference between two probability distributions (true & predicted) (negative avg log proba)
 
-# print("Logits shape: ", logits.shape)  # (batch_size, seq_length, vocab_size)
-# print("Targets shape: ", targets.shape)  # (batch_size, seq_length)
+    # print("Logits shape: ", logits.shape)  # (batch_size, seq_length, vocab_size)
+    # print("Targets shape: ", targets.shape)  # (batch_size, seq_length)
 
-logits_flat = logits.flatten(0, 1)  # (batch_size * seq_length, vocab_size)
-targets_flat = targets.flatten() # (batch_size * seq_length)
+    logits_flat = logits.flatten(0, 1)  # (batch_size * seq_length, vocab_size)
+    targets_flat = targets.flatten() # (batch_size * seq_length)
 
-# print("Logits flat shape: ", logits_flat.shape)
-# print("Targets flat shape: ", targets_flat.shape)
+    # print("Logits flat shape: ", logits_flat.shape)
+    # print("Targets flat shape: ", targets_flat.shape)
 
-loss = torch.nn.functional.cross_entropy(logits_flat, targets_flat)
-# print("Cross-entropy loss: ", loss)  # want to minimize this loss
+    loss = torch.nn.functional.cross_entropy(logits_flat, targets_flat)
+    # print("Cross-entropy loss: ", loss)  # want to minimize this loss
 
-# perplexity - measures how well a probability distribution was predicted by the model
-perplexity = torch.exp(loss)
-# print("Perplexity: ", perplexity)
+    # perplexity - measures how well a probability distribution was predicted by the model
+    perplexity = torch.exp(loss)
+    # print("Perplexity: ", perplexity)
 
-with open('data/the-verdict.txt', "r", encoding="utf-8") as f:
-    text = f.read()
+    with open('data/the-verdict.txt', "r", encoding="utf-8") as f:
+        text = f.read()
 
-total_characters = len(text)
-total_tokens = len(tokenizer.encode(text, allowed_special={'<|endoftext|>'}))
-# print(f"Total characters in text: {total_characters}")
-# print(f"Total tokens in text: {total_tokens}")
+    total_characters = len(text)
+    total_tokens = len(tokenizer.encode(text, allowed_special={'<|endoftext|>'}))
+    # print(f"Total characters in text: {total_characters}")
+    # print(f"Total tokens in text: {total_tokens}")
 
-train_ratio = 0.90
-split_idx = int(len(text) * train_ratio)
-train_data = text[:split_idx]
-val_data = text[split_idx:]
+    train_ratio = 0.90
+    split_idx = int(len(text) * train_ratio)
+    train_data = text[:split_idx]
+    val_data = text[split_idx:]
 
-torch.manual_seed(123)
-train_loader = create_dataloader_v1(
-    train_data,
-    batch_size = 2,
-    max_length = GPT_CONFIG_124M["context_length"],
-    stride = GPT_CONFIG_124M["context_length"],
-    shuffle = True,
-    drop_last = True,
-    num_workers = 0
-)
+    torch.manual_seed(123)
+    train_loader = create_dataloader_v1(
+        train_data,
+        batch_size = 2,
+        max_length = GPT_CONFIG_124M["context_length"],
+        stride = GPT_CONFIG_124M["context_length"],
+        shuffle = True,
+        drop_last = True,
+        num_workers = 0
+    )
 
-val_loader = create_dataloader_v1(
-    val_data,
-    batch_size = 2,
-    max_length = GPT_CONFIG_124M["context_length"],
-    stride = GPT_CONFIG_124M["context_length"],
-    shuffle = False,
-    drop_last = False,
-    num_workers = 0
-)
+    val_loader = create_dataloader_v1(
+        val_data,
+        batch_size = 2,
+        max_length = GPT_CONFIG_124M["context_length"],
+        stride = GPT_CONFIG_124M["context_length"],
+        shuffle = False,
+        drop_last = False,
+        num_workers = 0
+    )
 
 def calc_loss_batch(input_batch, target_batch, model, device):
     input_batch = input_batch.to(device)
@@ -151,14 +153,15 @@ def calc_loss_loader(data_loader, model, device, num_batches = None):
             break
     return total_loss / num_batches # average loss over all batches
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-with torch.no_grad():
-    train_loss = calc_loss_loader(train_loader, model, device)
-    val_loss = calc_loss_loader(val_loader, model, device)
-    
-# print(f"Train loss: {train_loss}")
-# print(f"Validation loss: {val_loss}")
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    with torch.no_grad():
+        train_loss = calc_loss_loader(train_loader, model, device)
+        val_loss = calc_loss_loader(val_loader, model, device)
+        
+    # print(f"Train loss: {train_loss}")
+    # print(f"Validation loss: {val_loss}")
 
 
 def train_model_simple(model, train_loader, val_loader, optimizer, device, num_epochs, eval_freq, eval_iter, start_context, tokenizer): # eval_iter is number of random batches to eval on whereas eval_freq is number of steps between evals
@@ -211,25 +214,26 @@ def generate_and_print_sample(model, tokenizer, device, start_context): # sanity
     
 # using AdamW optimizer minimizes model complexity and prevents overfitting by penalizing large weights
 
-torch.manual_seed(123)
-model = GPTModel(GPT_CONFIG_124M)
-model.to(device)
-optimizer = torch.optim.AdamW(model.parameters(), lr = 0.0004, weight_decay = 0.1)
-num_epochs = 10
-''' 
-train_losses, val_losses, tokens_seen = train_model_simple(
-    model,
-    train_loader,
-    val_loader,
-    optimizer,
-    device,
-    num_epochs = num_epochs,
-    eval_freq = 5, # eval every 5 steps
-    eval_iter = 5, # eval on 5 random batches
-    start_context = "Every effort moves you",
-    tokenizer = tokenizer
-)
-'''
+if __name__ == "__main__":
+    torch.manual_seed(123)
+    model = GPTModel(GPT_CONFIG_124M)
+    model.to(device)
+    optimizer = torch.optim.AdamW(model.parameters(), lr = 0.0004, weight_decay = 0.1)
+    num_epochs = 10
+    ''' 
+    train_losses, val_losses, tokens_seen = train_model_simple(
+        model,
+        train_loader,
+        val_loader,
+        optimizer,
+        device,
+        num_epochs = num_epochs,
+        eval_freq = 5, # eval every 5 steps
+        eval_iter = 5, # eval on 5 random batches
+        start_context = "Every effort moves you",
+        tokenizer = tokenizer
+    )
+    '''
 
 # .parameters() method returns all trainable weight parameters of the model
 
@@ -260,48 +264,50 @@ epochs_tensor = torch.linspace(0, num_epochs, len(train_losses))
 plot_losses(epochs_tensor, tokens_seen, train_losses, val_losses)
 '''
 
-model.to("cpu")
-model.eval()
+if __name__ == "__main__":
+    model.to("cpu")
+    model.eval()
 
-tokenizer = tiktoken.get_encoding("gpt2")
-token_ids = generate_text_simple(
-    model = model,
-    idx = text_to_token_ids("Every effort moves you", tokenizer),
-    max_new_tokens = 25,
-    context_size = GPT_CONFIG_124M["context_length"]
-)
+    tokenizer = tiktoken.get_encoding("gpt2")
+    token_ids = generate_text_simple(
+        model = model,
+        idx = text_to_token_ids("Every effort moves you", tokenizer),
+        max_new_tokens = 25,
+        context_size = GPT_CONFIG_124M["context_length"]
+    )
 
-# print("Output text: ", token_ids_to_text(token_ids, tokenizer))
+    # print("Output text: ", token_ids_to_text(token_ids, tokenizer))
 
 
 # temperature scaling
 
-vocab = {
-    "closer": 0,
-    "every": 1,
-    "effort": 2,
-    "forward": 3,
-    "inches": 4,
-    "moves": 5,
-    "pizza": 6,
-    "toward": 7,
-    "you": 8
-}
+if __name__ == "__main__":
+    vocab = {
+        "closer": 0,
+        "every": 1,
+        "effort": 2,
+        "forward": 3,
+        "inches": 4,
+        "moves": 5,
+        "pizza": 6,
+        "toward": 7,
+        "you": 8
+    }
 
-inverse_vocab = {v: k for k, v in vocab.items()}
+    inverse_vocab = {v: k for k, v in vocab.items()}
 
-next_token_logits = torch.tensor([4.51, 0.89, -1.90, 6.75, 1.63, -1.62, -1.89, 6.28, 1.79])
-probas = torch.softmax(next_token_logits, dim=-1)
-next_token_id = torch.argmax(probas).item()
-# print(inverse_vocab[next_token_id]) # forward
+    next_token_logits = torch.tensor([4.51, 0.89, -1.90, 6.75, 1.63, -1.62, -1.89, 6.28, 1.79])
+    probas = torch.softmax(next_token_logits, dim=-1)
+    next_token_id = torch.argmax(probas).item()
+    # print(inverse_vocab[next_token_id]) # forward
 
-def print_sampled_tokens(probas):
-    torch.manual_seed(123)
-    sample = [torch.multinomial(probas, num_samples=1).item() for _ in range(1_000)]
-    sampled_ids = torch.bincount(torch.tensor(sample))
-    for i, freq in enumerate(sampled_ids):
-        print(f"Token: {inverse_vocab[i]}, Frequency: {freq.item()}")
-# print_sampled_tokens(probas)
+    def print_sampled_tokens(probas):
+        torch.manual_seed(123)
+        sample = [torch.multinomial(probas, num_samples=1).item() for _ in range(1_000)]
+        sampled_ids = torch.bincount(torch.tensor(sample))
+        for i, freq in enumerate(sampled_ids):
+            print(f"Token: {inverse_vocab[i]}, Frequency: {freq.item()}")
+    # print_sampled_tokens(probas)
 
 # multinomial sampling generates diverse outputs by sampling from the probability distribution of next tokens, rather than always choosing the most probable token
 # argmax gives deterministic output while multinomial sampling gives diverse outputs
@@ -335,18 +341,19 @@ plt.show()
 
 # restrict the sampling to the top k most probable tokens
 
-top_k = 3
-top_logits, top_pos = torch.topk(next_token_logits, top_k)
-# print("Top logits: ", top_logits)
-# print("Top positions: ", top_pos)
+if __name__ == "__main__":
+    top_k = 3
+    top_logits, top_pos = torch.topk(next_token_logits, top_k)
+    # print("Top logits: ", top_logits)
+    # print("Top positions: ", top_pos)
 
-# set lowest logit values to -inf so that their softmax probabilities become 0
-new_logits = torch.where(condition = next_token_logits < top_logits[-1],
-                         input = torch.tensor(float('-inf')),
-                         other = next_token_logits)
+    # set lowest logit values to -inf so that their softmax probabilities become 0
+    new_logits = torch.where(condition = next_token_logits < top_logits[-1],
+                             input = torch.tensor(float('-inf')),
+                             other = next_token_logits)
 
-topk_probas = torch.softmax(new_logits, dim=-1)
-# print("Top-k probabilities: ", topk_probas)
+    topk_probas = torch.softmax(new_logits, dim=-1)
+    # print("Top-k probabilities: ", topk_probas)
 
 def generate(model, idx, max_new_tokens, context_size, temperature = 0.0, top_k = None, eos_id = None):
     for _ in range(max_new_tokens):
@@ -376,75 +383,78 @@ def generate(model, idx, max_new_tokens, context_size, temperature = 0.0, top_k 
         idx = torch.cat((idx, idx_next), dim=1)
     return idx
             
-torch.manual_seed(123)
-token_ids = generate(
-    model = model,
-    idx = text_to_token_ids("Every effort moves you", tokenizer),
-    max_new_tokens = 15,
-    context_size = GPT_CONFIG_124M["context_length"],
-    top_k = 25,
-    temperature = 1.4
-)
+if __name__ == "__main__":
+    torch.manual_seed(123)
+    token_ids = generate(
+        model = model,
+        idx = text_to_token_ids("Every effort moves you", tokenizer),
+        max_new_tokens = 15,
+        context_size = GPT_CONFIG_124M["context_length"],
+        top_k = 25,
+        temperature = 1.4
+    )
 
-# print("Output text:", token_ids_to_text(token_ids, tokenizer))
+    # print("Output text:", token_ids_to_text(token_ids, tokenizer))
 
-# saving model
+if __name__ == "__main__":
+    # saving model
 
-torch.save(model.state_dict(), "model.pth")
+    torch.save(model.state_dict(), "model.pth")
 
-# loading model
+    # loading model
 
-model = GPTModel(GPT_CONFIG_124M)
-model.load_state_dict(torch.load("model.pth"))
-model.eval()
+    model = GPTModel(GPT_CONFIG_124M)
+    model.load_state_dict(torch.load("model.pth"))
+    model.eval()
 
-# save model and optimizer state dicts together for resuming training
+    # save model and optimizer state dicts together for resuming training
 
-torch.save({
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-}, "model_optimizer.pth"
-)
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+    }, "model_optimizer.pth"
+    )
 
-# restore model and optimizer state dicts
+    # restore model and optimizer state dicts
 
-checkpoint = torch.load("model_optimizer.pth")
-model = GPTModel(GPT_CONFIG_124M)
-model.load_state_dict(checkpoint['model_state_dict'])
-optimizer = torch.optim.AdamW(model.parameters(), lr = 0.5e-4, weight_decay = 0.1)
-optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-model.train()
+    checkpoint = torch.load("model_optimizer.pth")
+    model = GPTModel(GPT_CONFIG_124M)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer = torch.optim.AdamW(model.parameters(), lr = 0.5e-4, weight_decay = 0.1)
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    model.train()
 
 # loading pretrained weights from OpenAI
 
-GPT_CONFIG_124M = {
-    "vocab_size": 50257,
-    "context_length": 1024,
-    "emb_dim": 768,
-    "n_heads": 12,
-    "n_layers": 12,
-    "dropout": 0.1,
-    "qkv_bias": True
-}
+if __name__ == "__main__":
+    GPT_CONFIG_124M = {
+        "vocab_size": 50257,
+        "context_length": 1024,
+        "emb_dim": 768,
+        "n_heads": 12,
+        "n_layers": 12,
+        "dropout": 0.1,
+        "qkv_bias": True
+    }
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = GPTModel(GPT_CONFIG_124M)
-model.eval()
-model.to(device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = GPTModel(GPT_CONFIG_124M)
+    model.eval()
+    model.to(device)
 
-state_dict = torch.load("gpt2-small-124M.pth", map_location=device, weights_only=True)
-model.load_state_dict(state_dict, strict=True)
-tokenizer = tiktoken.get_encoding("gpt2")
-start_context = "Every effort moves you"
-token_ids = tokenizer.encode(start_context)
-token_tensor = torch.tensor(token_ids).unsqueeze(0).to(device)
+    state_dict = torch.load("gpt2-small-124M.pth", map_location = device, weights_only = True)
+    model.load_state_dict(state_dict, strict=True)
+    tokenizer = tiktoken.get_encoding("gpt2")
+    start_context = "Every effort moves you"
+    token_ids = tokenizer.encode(start_context)
+    token_tensor = torch.tensor(token_ids).unsqueeze(0).to(device)
 
-out = generate(
-    model = model,
-    idx = token_tensor,
-    max_new_tokens=25,
-    context_size=1024
-)
+    out = generate(
+        model = model,
+        idx = token_tensor,
+        max_new_tokens=25,
+        context_size=1024
+    )
 
-decoded_text = tokenizer.decode(out.squeeze(0).tolist())
-# print(f"Output text:{decoded_text}")
+    decoded_text = tokenizer.decode(out.squeeze(0).tolist())
+    # print(f"Output text:{decoded_text}")
